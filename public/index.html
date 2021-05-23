@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download video</title>
+</head>
+
+<body>
+    <div id='url'></div>
+    <div id='wait'>Đang tải video, vui lòng chờ chút....</div>
+    <div id='close'>Tự động đóng sau 30 giây</div>
+</body>
+<script>
+    function getURL(name) {
+        var url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+    var url = getURL('url');
+    document.getElementById('url').innerHTML = `<a href='${url}' target='_blank'>Link video: ${url} </a>`;
+    var timeout = 30;
+    setInterval(()=>{
+        timeout--;
+        if(timeout<0) timeout = 0;
+        document.getElementById('close').innerHTML = `Tự động đóng sau ${timeout} giây.`; 
+    },1000);
+    fetch(`/getlink?url=${url}`)
+        .then(response => response.json())
+        .then(data => data.url)
+        .then(data => {
+            if(data == 'error'){
+                document.getElementById('wait').innerHTML = '<strong>Tải xuống thất bại.</strong>';
+                setTimeout(()=>{
+                    location.reload();
+                },1000);
+            }
+            else{
+                window.location.href = data;
+                document.getElementById('wait').innerHTML = '<strong>Tải xuống hoàn tất.</strong>';
+            }
+        
+        })
+        .catch(err => console.log(err));
+</script>
+
+</html>
